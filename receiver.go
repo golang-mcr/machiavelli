@@ -1,4 +1,4 @@
-// +build reciever
+// +build receiver
 
 package main
 
