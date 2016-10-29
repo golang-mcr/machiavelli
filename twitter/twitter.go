@@ -25,8 +25,11 @@ type client struct {
 
 func (c client) Listen(search string) (<-chan Tweet, func()) {
 	return make(chan Tweet), func() { return }
+	ch := make(chan Tweet)
+
+	return ch, func() {}
 }
 
 func (c client) Tweet(tweet Tweet) error {
 	return nil
-}
+
