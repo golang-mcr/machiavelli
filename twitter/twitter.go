@@ -32,4 +32,4 @@ func (c client) Listen(search string) (<-chan Tweet, func()) {
 
 func (c client) Tweet(tweet Tweet) error {
 	return nil
-
+}
