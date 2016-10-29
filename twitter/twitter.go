@@ -36,7 +36,7 @@ func (c client) Listen(search string) (<-chan Tweet, func()) {
 	for !cancel {
 		req, _ := http.NewRequest(http.MethodGet, apiURL+apiVersion+timelineURI, nil)
 		q := req.URL.Query()
-		q.Add("screen_name", "hackmanchester")
+		q.Add("screen_name", search)
 		q.Add("count", "1")
 		q.Add("include_rts", "false")
 		req.URL.RawQuery = q.Encode()

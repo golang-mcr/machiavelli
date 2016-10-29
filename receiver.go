@@ -23,8 +23,12 @@ func main() {
 		return
 	}
 
+	fmt.Println("+-+-+-+-+-+-+-+-+-+-+-+-+-+\n|S|t|e|g|a|n|o|G|O|p|h|e|r|\n+-+-+-+-+-+-+-+-+-+-+-+-+-+")
+	fmt.Println("Listening for tweets...")
+
 		client := twitter.NewClient(http.DefaultClient, &cfg.Twitter)
-	_, stop := client.Listen("test")
+	_, stop := client.Listen("go_machiavelli")
 	stop()
-	fmt.Println("machiavelli")
+
+
 }

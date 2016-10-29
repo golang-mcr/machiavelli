@@ -31,10 +31,11 @@ func main() {
 	tweet := twitter.Tweet{
 		Message: message,
 	}
+	fmt.Println("+-+-+-+-+-+-+-+-+-+-+-+-+-+\n|S|t|e|g|a|n|o|G|O|p|h|e|r|\n+-+-+-+-+-+-+-+-+-+-+-+-+-+")
+	fmt.Println("Sending encoded message...")
+
 	err := client.Tweet(tweet)
     if err != nil {
 	    log.Printf(err.Error())
     }
-
-	fmt.Println("machiavelli")
 }
