@@ -34,7 +34,7 @@ func (c client) Listen(search string) (<-chan Tweet, func()) {
 	ch := make(chan Tweet)
 	var cancel bool
 	for (!cancel){
-			req, _ := http.NewRequest("GET", apiURL+apiVersion+timelineURI, nil)
+			req, _ := http.NewRequest(http.MethodGet, apiURL+apiVersion+timelineURI, nil)
 			q := req.URL.Query()
 			q.Add("screen_name", "hackmanchester")
 			q.Add("count", "1")
