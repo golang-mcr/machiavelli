@@ -5,27 +5,34 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
 
-	"github.com/golang-mcr/machiavelli/mock"
+	gcfg "gopkg.in/gcfg.v1"
+
 	"github.com/golang-mcr/machiavelli/twitter"
 )
 
 func main() {
-	var message string
+	var configFile, message string
+	flag.StringVar(&configFile, "config", "", "configuration file (.gcfg)")
 	flag.StringVar(&message, "message", "", "message to be sent")
 	flag.Parse()
 
-	client := &mock.Client{
-		TweetFunc: func(tweet twitter.Tweet) error {
-			fmt.Printf("tweeted: %s\n", tweet.Message)
-			return nil
-		},
+	var cfg Config
+	if err := gcfg.ReadFileInto(&cfg, configFile); err != nil {
+		fmt.Fprintf(os.Stderr, "error getting config variables: %v from %v\n", err, configFile)
+		return
 	}
+
+	client := twitter.NewClient(http.DefaultClient, &cfg.Twitter)
 
 	tweet := twitter.Tweet{
 		Message: message,
 	}
-	client.Tweet(tweet)
+	err := client.Tweet(tweet)
+	log.Printf(err.Error())
 
 	fmt.Println("machiavelli")
 }

@@ -3,8 +3,10 @@ package twitter
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"io/ioutil"
+	"net/http"
+
+	"github.com/apex/log"
 )
 
 // Tweet holds the contents of a tweet
@@ -15,7 +17,7 @@ type Tweet struct {
 // Client defines the opertations of twitter client
 type Client interface {
 	Listen(search string) (<-chan Tweet, func())
-	Tweet(tweet string) error
+	Tweet(tweet Tweet) error
 }
 
 // NewClient takes a http client with oauth credentials
@@ -30,50 +32,49 @@ type client struct {
 }
 
 func (c client) Listen(search string) (<-chan Tweet, func()) {
-	return make(chan Tweet), func() { return }
 	ch := make(chan Tweet)
 	var cancel bool
-	for (!cancel){
-			req, _ := http.NewRequest(http.MethodGet, apiURL+apiVersion+timelineURI, nil)
-			q := req.URL.Query()
-			q.Add("screen_name", "hackmanchester")
-			q.Add("count", "1")
-			q.Add("include_rts", "false")
-			req.URL.RawQuery = q.Encode()
+	for !cancel {
+		req, _ := http.NewRequest(http.MethodGet, apiURL+apiVersion+timelineURI, nil)
+		q := req.URL.Query()
+		q.Add("screen_name", "hackmanchester")
+		q.Add("count", "1")
+		q.Add("include_rts", "false")
+		req.URL.RawQuery = q.Encode()
 
-			oa := NewOAuthDetails(c.config, "something")
-			req.Header.Set(authHeader, fmt.Sprintf("%s", oa))
+		oa := NewOAuthDetails(c.config, "something")
+		req.Header.Set(authHeader, fmt.Sprintf("%s", oa))
 
-			resp, _ := c.httpClient.Do(req)
-			// if err != nil {
-			// 	return fmt.Errorf("%v", err)
-			// }
-			// if res.StatusCode != http.StatusOK {
-			// 	return fmt.Errorf("%s", res.Status)
-			// }
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			log.Errorf("%v", err)
+		}
+		// if res.StatusCode != http.StatusOK {
+		// 	return fmt.Errorf("%s", res.Status)
+		// }
 
-			defer resp.Body.Close()
-			resp_body, _ := ioutil.ReadAll(resp.Body)
-			// if err != nil {
-			// 	return fmt.Errorf("%v", err)
-			// }
+		defer resp.Body.Close()
+		respBody, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Errorf("%v", err)
+		}
 
-			var tweet = Tweet{Message: string(resp_body)}
+		var tweet = Tweet{Message: string(respBody)}
 
-			ch <- tweet
+		ch <- tweet
 	}
 
 	return ch, func() { cancel = true }
 }
 
-func (c client) Tweet(tweet string) error {
-	if len(tweet) > 140 {
+func (c client) Tweet(tweet Tweet) error {
+	if len(tweet.Message) > 140 {
 		return errors.New("tweet exceeds 140 character limit")
 	}
 
-	oa := NewOAuthDetails(c.config, tweet)
+	oa := NewOAuthDetails(c.config, tweet.Message)
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf(apiURL+apiVersion+statusURI+"?status=%s", encodeStatus(&tweet)), nil)
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf(apiURL+apiVersion+statusURI+"?status=%s", encodeStatus(&tweet.Message)), nil)
 	if err != nil {
 		return fmt.Errorf("error building request: %v", err)
 	}

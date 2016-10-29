@@ -2,8 +2,8 @@ package twitter
 
 // Config contains the Twitter API keys.
 type Config struct {
-	ConsumerKey,
-	ConsumerSecret,
-	AccessToken,
+	ConsumerKey       string
+	ConsumerSecret    string
+	AccessToken       string
 	AccessTokenSecret string
 }
