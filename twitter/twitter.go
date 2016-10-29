@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-    "log"
+  "log"
 )
 
 // Tweet holds the contents of a tweet
@@ -18,12 +18,6 @@ type Client interface {
 	Listen(search string) (<-chan Tweet, func())
 	Tweet(tweet Tweet) error
 }
-
-// NewClient takes a http client with oauth credentials
-// to make future calls to twitter
-// func NewClient(httpClient *http.Client) Client {
-// 	return client{httpClient}
-// }
 
 type client struct {
 	httpClient *http.Client
@@ -45,12 +39,15 @@ func (c client) Listen(search string) (<-chan Tweet, func()) {
 		req.Header.Set(authHeader, fmt.Sprintf("%s", oa))
 
 		resp, err := c.httpClient.Do(req)
+		fmt.Println("[+] Polling for tweets")
+
 		if err != nil {
 			log.Printf("%v", err)
 		}
-		// if res.StatusCode != http.StatusOK {
-		// 	return fmt.Errorf("%s", res.Status)
-		// }
+
+		if resp.StatusCode != http.StatusOK {
+			log.Printf(resp.Status)
+		}
 
 		defer resp.Body.Close()
 		respBody, err := ioutil.ReadAll(resp.Body)
