@@ -2,10 +2,10 @@ package main
 
 import (
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"strings"
 	"time"
-  "log"
 )
 
 func GetCurrentHashTag() string {

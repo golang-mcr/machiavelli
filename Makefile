@@ -12,3 +12,6 @@ listen:
 	./machiavelli-receiver --config config.gcfg
 send:
 	./machiavelli-sender --config config.gcfg --message "Hello world!"
+
+cs-fix:
+	go fmt .

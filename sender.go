@@ -36,7 +36,7 @@ func main() {
 	fmt.Println(tweet.Message)
 
 	err := client.Tweet(tweet)
-    if err != nil {
-	    log.Printf(err.Error())
-    }
+	if err != nil {
+		log.Printf(err.Error())
+	}
 }
