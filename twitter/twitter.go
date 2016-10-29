@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"io/ioutil"
 )
 
 // Tweet holds the contents of a tweet
@@ -19,9 +20,9 @@ type Client interface {
 
 // NewClient takes a http client with oauth credentials
 // to make future calls to twitter
-func NewClient(httpClient *http.Client) Client {
-	return client{httpClient}
-}
+// func NewClient(httpClient *http.Client) Client {
+// 	return client{httpClient}
+// }
 
 type client struct {
 	httpClient *http.Client
@@ -31,8 +32,39 @@ type client struct {
 func (c client) Listen(search string) (<-chan Tweet, func()) {
 	return make(chan Tweet), func() { return }
 	ch := make(chan Tweet)
+	var cancel bool
+	for (!cancel){
+			req, _ := http.NewRequest("GET", "https://api.twitter.com/1.1/statuses/user_timeline.json", nil)
+			q := req.URL.Query()
+			q.Add("screen_name", "hackmanchester")
+			q.Add("count", "1")
+			q.Add("include_rts", "false")
+			req.URL.RawQuery = q.Encode()
 
-	return ch, func() {}
+			oa := NewOAuthDetails(c.config, "something")
+
+			req.Header.Set(authHeader, fmt.Sprintf("%s", oa))
+
+			resp, _ := c.httpClient.Do(req)
+			// if err != nil {
+			// 	return fmt.Errorf("%v", err)
+			// }
+			// if res.StatusCode != http.StatusOK {
+			// 	return fmt.Errorf("%s", res.Status)
+			// }
+
+			defer resp.Body.Close()
+			resp_body, _ := ioutil.ReadAll(resp.Body)
+			// if err != nil {
+			// 	return fmt.Errorf("%v", err)
+			// }
+
+			var tweet = Tweet{Message: string(resp_body)}
+
+			ch <- tweet
+	}
+
+	return ch, func() { cancel = true }
 }
 
 func (c client) Tweet(tweet string) error {
