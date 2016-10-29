@@ -7,3 +7,6 @@ build-sender:
 
 build-receiver:
 	go build -o $(NAME)-receiver -tags receiver
+
+listen:
+	./machiavelli-receiver --config config.gcfg
