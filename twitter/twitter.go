@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/apex/log"
+    "log"
 )
 
 // Tweet holds the contents of a tweet
@@ -47,7 +46,7 @@ func (c client) Listen(search string) (<-chan Tweet, func()) {
 
 		resp, err := c.httpClient.Do(req)
 		if err != nil {
-			log.Errorf("%v", err)
+			log.Printf("%v", err)
 		}
 		// if res.StatusCode != http.StatusOK {
 		// 	return fmt.Errorf("%s", res.Status)
@@ -56,7 +55,7 @@ func (c client) Listen(search string) (<-chan Tweet, func()) {
 		defer resp.Body.Close()
 		respBody, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Errorf("%v", err)
+			log.Printf("%v", err)
 		}
 
 		var tweet = Tweet{Message: string(respBody)}
@@ -84,7 +83,6 @@ func (c client) Tweet(tweet Tweet) error {
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
-	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("%s", res.Status)

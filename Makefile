@@ -1,8 +1,5 @@
 NAME = machiavelli
 
-setup:
-	cp config.gcfg.example config.gcfg
-
 all: build-sender build-receiver
 	
 build-sender:

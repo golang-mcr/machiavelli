@@ -32,7 +32,9 @@ func main() {
 		Message: message,
 	}
 	err := client.Tweet(tweet)
-	log.Printf(err.Error())
+    if err != nil {
+	    log.Printf(err.Error())
+    }
 
 	fmt.Println("machiavelli")
 }
