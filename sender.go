@@ -29,7 +29,7 @@ func main() {
 	client := twitter.NewClient(http.DefaultClient, &cfg.Twitter)
 
 	tweet := twitter.Tweet{
-		Message: message,
+		Message: message + " #" + GetCurrentHashTag(),
 	}
 	fmt.Println("+-+-+-+-+-+-+-+-+-+-+-+-+-+\n|S|t|e|g|a|n|o|G|O|p|h|e|r|\n+-+-+-+-+-+-+-+-+-+-+-+-+-+")
 	fmt.Println("Sending encoded message...")
