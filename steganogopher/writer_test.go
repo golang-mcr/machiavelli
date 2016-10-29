@@ -14,15 +14,22 @@ import (
 
 var testCase = []struct {
 	filename  string
+	output    string
 	quality   int
 	tolerance int64
 }{
-	//{"testdata/video-001.png", 1, 24 << 8}, // -> too small to encode text
-	{"testdata/twitter.png", 20, 12 << 8},
-	{"testdata/twitter.png", 60, 8 << 8},
-	{"testdata/twitter.png", 80, 6 << 8},
-	{"testdata/twitter.png", 90, 4 << 8},
-	{"testdata/twitter.png", 100, 2 << 8},
+
+	{"_test/twitter.png", "_test/twitter_out-20.jpg", 20, 12 << 8},
+	{"_test/twitter.png", "_test/twitter_out-60.jpg", 60, 8 << 8},
+	{"_test/twitter.png", "_test/twitter_out-80.jpg", 80, 6 << 8},
+	{"_test/twitter.png", "_test/twitter_out-90.jpg", 90, 4 << 8},
+	{"_test/twitter.png", "_test/twitter_out-100.jpg", 100, 2 << 8},
+
+	{"_test/evilcat.png", "_test/evlicat_out-20.jpg", 20, 12 << 8},
+	{"_test/evilcat.png", "_test/evlicat_out-60.jpg", 60, 8 << 8},
+	{"_test/evilcat.png", "_test/evlicat_out-80.jpg", 80, 6 << 8},
+	{"_test/evilcat.png", "_test/evlicat_out-90.jpg", 90, 4 << 8},
+	{"_test/evilcat.png", "_test/evlicat_out-100.jpg", 100, 2 << 8},
 }
 
 func delta(u0, u1 uint32) int64 {
@@ -33,31 +40,34 @@ func delta(u0, u1 uint32) int64 {
 	return d
 }
 
-func readPng(filename string) (image.Image, error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
+func decodePng(f *os.File) (image.Image, error) {
 
 	defer f.Close()
 	return png.Decode(f)
 }
 
 func TestWriteToDisk(t *testing.T) {
-	tc := testCase[len(testCase)-1]
-	msg := "Hello world!"
+	for _, tc := range testCase {
 
-	i, err := readPng(tc.filename)
-	if err != nil {
-		t.Error(tc.filename, err)
-	}
-	f, err := os.Create("testdata/output.jpeg")
-	if err != nil {
-		t.Error(tc.filename, err)
-	}
-	err = Encode(f, i, msg, &Options{Quality: tc.quality})
-	if err != nil {
-		t.Error(tc.filename, err)
+		msg := "Hello world!"
+
+		file, err := os.Open(tc.filename)
+		if err != nil {
+			t.Errorf("Error while opening the file %s", tc.filename)
+		}
+
+		i, err := decodePng(file)
+		if err != nil {
+			t.Error(tc.filename, err)
+		}
+		f, err := os.Create(tc.output)
+		if err != nil {
+			t.Error(tc.filename, err)
+		}
+		err = Encode(f, i, msg, &Options{Quality: tc.quality})
+		if err != nil {
+			t.Error(tc.filename, err)
+		}
 	}
 }
 
@@ -65,8 +75,13 @@ func TestWriter(t *testing.T) {
 	for _, tc := range testCase {
 		msg := "Hello world; or こんにちは 世界!"
 
+		file, err := os.Open(tc.filename)
+		if err != nil {
+			t.Errorf("Error while opening file %s", tc.filename)
+		}
+
 		// Read the image.
-		m0, err := readPng(tc.filename)
+		m0, err := decodePng(file)
 		if err != nil {
 			t.Error(tc.filename, err)
 			continue

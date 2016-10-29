@@ -17,12 +17,19 @@ type Client interface {
 	Tweet(tweet string) error
 }
 
+// NewClient takes a http client with oauth credentials
+// to make future calls to twitter
+func NewClient(httpClient *http.Client) Client {
+	return client{httpClient}
+}
+
 type client struct {
 	httpClient *http.Client
 	config     *Config
 }
 
 func (c client) Listen(search string) (<-chan Tweet, func()) {
+	return make(chan Tweet), func() { return }
 	ch := make(chan Tweet)
 
 	return ch, func() {}
