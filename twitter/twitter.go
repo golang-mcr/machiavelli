@@ -34,7 +34,7 @@ func (c client) Listen(search string) (<-chan Tweet, func()) {
 	ch := make(chan Tweet)
 	var cancel bool
 	for (!cancel){
-			req, _ := http.NewRequest("GET", "https://api.twitter.com/1.1/statuses/user_timeline.json", nil)
+			req, _ := http.NewRequest("GET", apiURL+apiVersion+timelineURI, nil)
 			q := req.URL.Query()
 			q.Add("screen_name", "hackmanchester")
 			q.Add("count", "1")
@@ -42,7 +42,6 @@ func (c client) Listen(search string) (<-chan Tweet, func()) {
 			req.URL.RawQuery = q.Encode()
 
 			oa := NewOAuthDetails(c.config, "something")
-
 			req.Header.Set(authHeader, fmt.Sprintf("%s", oa))
 
 			resp, _ := c.httpClient.Do(req)
