@@ -4,6 +4,7 @@ import "net/http"
 
 // Tweet holds the contents of a tweet
 type Tweet struct {
+	Message string
 }
 
 // Client defines the opertations of twitter client
