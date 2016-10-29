@@ -1,7 +1,7 @@
 NAME = machiavelli
 
-build:
-	go build -o $(NAME)
+build-sender:
+	go build -o $(NAME)-sender -tags sender
 
-run: build
-	./$(NAME)
+build-receiver:
+	go build -o $(NAME)-receiver -tags receiver

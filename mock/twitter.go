@@ -8,10 +8,10 @@ type Client struct {
 	TweetFunc  func(twitter.Tweet) error
 }
 
-func (c *Client) Listen(search string) (<-chan Tweet, func()) {
+func (c *Client) Listen(search string) (<-chan twitter.Tweet, func()) {
 	return c.ListenFunc(search)
 }
 
-func (c *Client) Tweet(tweet Tweet) error {
+func (c *Client) Tweet(tweet twitter.Tweet) error {
 	return c.TweetFunc(tweet)
 }
