@@ -33,6 +33,7 @@ func main() {
 	}
 	fmt.Println("+-+-+-+-+-+-+-+-+-+-+-+-+-+\n|S|t|e|g|a|n|o|G|O|p|h|e|r|\n+-+-+-+-+-+-+-+-+-+-+-+-+-+")
 	fmt.Println("Sending encoded message...")
+	fmt.Println(tweet.Message)
 
 	err := client.Tweet(tweet)
     if err != nil {

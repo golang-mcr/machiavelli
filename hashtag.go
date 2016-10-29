@@ -1,26 +1,24 @@
 package main
 
 import (
-    "math/rand"
-    "time"
+	"io/ioutil"
+	"math/rand"
+	"strings"
+	"time"
+  "log"
 )
 
 func GetCurrentHashTag() string {
-    hashtags := []string{
-      "Nulla",
-      "venenatis",
-      "viverra",
-      "pretium",
-      "Proin",
-      "luctus",
-      "ornare",
-      "dapibus",
-    }
+	content, err := ioutil.ReadFile("diceware.lst")
+	if err != nil {
+		log.Printf("%v", err)
+	}
+	hashtags := strings.Split(string(content), "\n")
 
-    // TODO: allow seed to be configured per client
-    rand.Seed(31337 + time.Now().Unix())
+	// TODO: allow seed to be configured per client
+	rand.Seed(31337 + time.Now().Unix())
 
-    index := rand.Intn(len(hashtags))
+	index := rand.Intn(len(hashtags))
 
-    return hashtags[index]
+	return hashtags[index]
 }
