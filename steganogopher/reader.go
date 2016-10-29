@@ -5,7 +5,7 @@
 // Package jpeg implements a JPEG image decoder and encoder.
 //
 // JPEG is defined in ITU-T T.81: http://www.w3.org/Graphics/JPEG/itu-t81.pdf.
-package strogonoff
+package steganogopher
 
 import (
 	"bufio"
@@ -457,29 +457,6 @@ func (d *decoder) decode(r io.Reader, configOnly bool) (image.Image, error) {
 		}
 	}
 	return d.img, nil
-}
-
-// Decode reads a JPEG image from r and returns it as an image.Image.
-func Decode(r io.Reader) (image.Image, error) {
-	var d decoder
-	return d.decode(r, false)
-}
-
-//
-func DecodeAndRead(r io.Reader) (image.Image, string, error) {
-	var d decoder
-	i, err := d.decode(r, false)
-	return i, string(d.data), err
-}
-
-// DecodeConfig returns the color model and dimensions of a JPEG image without
-// decoding the entire image.
-func DecodeConfig(r io.Reader) (image.Config, error) {
-	c, _, err := image.DecodeConfig(r)
-	if err != nil {
-		return image.Config{}, err
-	}
-	return c, nil
 }
 
 func init() {
