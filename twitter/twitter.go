@@ -20,6 +20,19 @@ type UploadResponse struct {
 	MediaId string `json:"media_id_string"`
 }
 
+type TwitterStatus struct {
+	Text string `json:"text"`
+	Lang    string `json:"lang"`
+	Entities struct {
+	        Media []Media `json:"media"`
+	} `json:"entities"`
+}
+
+type Media struct {
+    Id string `json:"id_str"`
+    Url string `json:"media_url"`
+}
+
 // Tweet holds the contents of a tweet
 type Tweet struct {
 	Message string
@@ -47,9 +60,6 @@ func (c client) Listen(search string) (<-chan Tweet, func()) {
 		q.Add("include_rts", "false")
 		req.URL.RawQuery = q.Encode()
 
-		oa := NewOAuthDetails(c.config, "something")
-		req.Header.Set(authHeader, fmt.Sprintf("%s", oa))
-
 		resp, err := c.httpClient.Do(req)
 		fmt.Println("[+] Polling for tweets")
 
@@ -67,7 +77,12 @@ func (c client) Listen(search string) (<-chan Tweet, func()) {
 			log.Printf("%v", err)
 		}
 
-		var tweet = Tweet{Message: string(respBody)}
+		var tweets []TwitterStatus
+		json.Unmarshal(respBody, &tweets)
+
+		fmt.Println(tweets)
+
+		tweet := Tweet{}
 
 		ch <- tweet
 	}
