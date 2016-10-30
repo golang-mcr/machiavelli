@@ -15,6 +15,7 @@ import (
 
 const (
 	apiURL          string = "https://api.twitter.com/"
+	//apiURL          string = "http://localhost:8080/"
 	mediaApiURL     string = "http://upload.twitter.com/"
 	//mediaApiURL     string = "http://localhost:8080/"
 	apiVersion      string = "1.1"

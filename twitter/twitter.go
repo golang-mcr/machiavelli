@@ -12,7 +12,13 @@ import (
 "mime/multipart"
 "os"
 "path/filepath"
+"github.com/dghubble/oauth1"
+"encoding/json"
 )
+
+type UploadResponse struct {
+	MediaId string `json:"media_id_string"`
+}
 
 // Tweet holds the contents of a tweet
 type Tweet struct {
@@ -91,6 +97,7 @@ func newfileUploadRequest(uri string, paramName string, path string) (*http.Requ
 
   req, err := http.NewRequest("POST", uri, body)
   req.Header.Set("Content-Type", writer.FormDataContentType())
+
   return req, err
 }
 
@@ -99,29 +106,32 @@ func (c client) Tweet(tweet Tweet) error {
 		return errors.New("tweet exceeds 140 character limit")
 	}
 
-  req, err := newfileUploadRequest(fmt.Sprintf(mediaApiURL + apiVersion + mediaURI), "media_data", "steganogopher/_test/terrorcat.jpg")
+  req, err := newfileUploadRequest(fmt.Sprintf(mediaApiURL + apiVersion + mediaURI), "media", "steganogopher/_test/terrorcat.jpg")
 	if err != nil {
 		return fmt.Errorf("error building request: %v", err)
 	}
-	oa := NewOAuthDetails(c.config, "something")
-	req.Header.Set(authHeader, fmt.Sprintf("%s", oa))
 
 	res, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
+
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("%s", res.Status)
 	}
 
+	defer res.Body.Close()
 
-	oa = NewOAuthDetails(c.config, tweet.Message)
 
-	req, err = http.NewRequest(http.MethodPost, fmt.Sprintf(apiURL+apiVersion+statusURI+"?status=%s", encodeStatus(&tweet.Message)), nil)
+	var uploadResponse UploadResponse
+  json.NewDecoder(res.Body).Decode(&uploadResponse)
+	//fmt.Println(uploadResponse.MediaId)
+
+  var url = fmt.Sprintf(apiURL+apiVersion+statusURI+"?status=%s&media_ids=%s", encodeStatus(&tweet.Message), encodeStatus(&uploadResponse.MediaId))
+	req, err = http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
 		return fmt.Errorf("error building request: %v", err)
 	}
-	req.Header.Set(authHeader, fmt.Sprintf("%s", oa))
 
 	res, err = c.httpClient.Do(req)
 	if err != nil {
@@ -138,5 +148,9 @@ func (c client) Tweet(tweet Tweet) error {
 // NewClient takes a http client with oauth credentials
 // to make future calls to twitter
 func NewClient(httpClient *http.Client, config *Config) Client {
+	config1 := oauth1.NewConfig(config.ConsumerKey, config.ConsumerSecret)
+  token := oauth1.NewToken(config.AccessToken, config.AccessTokenSecret)
+	httpClient = config1.Client(oauth1.NoContext, token)
+
 	return client{httpClient, config}
 }
