@@ -54,43 +54,45 @@ type client struct {
 func (c client) Listen(search string) (chan Tweet, func()) {
 	ch := make(chan Tweet)
 	var cancel bool
-	for !cancel {
-		req, _ := http.NewRequest(http.MethodGet, apiURL+apiVersion+timelineURI, nil)
-		q := req.URL.Query()
-		q.Add("screen_name", search)
-		q.Add("count", "1")
-		q.Add("include_rts", "false")
-		req.URL.RawQuery = q.Encode()
+	go func() {
+		for !cancel {
+			req, _ := http.NewRequest(http.MethodGet, apiURL+apiVersion+timelineURI, nil)
+			q := req.URL.Query()
+			q.Add("screen_name", search)
+			q.Add("count", "1")
+			q.Add("include_rts", "false")
+			req.URL.RawQuery = q.Encode()
 
-		resp, err := c.httpClient.Do(req)
-		fmt.Println("[+] Polling for tweets")
+			resp, err := c.httpClient.Do(req)
+			fmt.Println("[+] Polling for tweets")
 
-		if err != nil {
-			log.Printf("%v", err)
-		}
+			if err != nil {
+				log.Printf("%v", err)
+			}
 
-		if resp.StatusCode != http.StatusOK {
-			log.Printf(resp.Status)
-		}
+			if resp.StatusCode != http.StatusOK {
+				log.Printf(resp.Status)
+			}
 
-		defer resp.Body.Close()
-		respBody, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Printf("%v", err)
-		}
+			defer resp.Body.Close()
+			respBody, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Printf("%v", err)
+			}
 
-		var tweets []TwitterStatus
-		json.Unmarshal(respBody, &tweets)
+			var tweets []TwitterStatus
+			json.Unmarshal(respBody, &tweets)
 
-		fmt.Println(tweets)
+			fmt.Println(tweets)
 
-		for _, tweet := range tweets {
-			ch <- Tweet{
-				Message: tweet.Text,
-				Image:   tweet.Entities.Media[0].Url,
+			for _, tweet := range tweets {
+				ch <- Tweet{
+					Message: tweet.Text,
+					Image:   tweet.Entities.Media[0].Url,
+				}
 			}
 		}
-	}
+	}()
 
 	return ch, func() { cancel = true }
 }
