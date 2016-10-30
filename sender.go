@@ -53,7 +53,7 @@ func main() {
 		log.Fatal(err)
 	}
 	tweet := twitter.Tweet{
-		Message: message + " #" + GetCurrentHashTag(),
+		Message: fmt.Sprintf("#%s", GetCurrentHashTag()),
 		Image:   tmpfile.Name(),
 	}
 	fmt.Println("+-+-+-+-+-+-+-+-+-+-+-+-+-+\n|S|t|e|g|a|n|o|G|O|p|h|e|r|\n+-+-+-+-+-+-+-+-+-+-+-+-+-+")

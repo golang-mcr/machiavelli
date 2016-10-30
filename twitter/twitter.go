@@ -22,6 +22,7 @@ type UploadResponse struct {
 }
 
 type TwitterStatus struct {
+	ID       int    `json:"id"`
 	Text     string `json:"text"`
 	Lang     string `json:"lang"`
 	Entities struct {
@@ -54,6 +55,7 @@ type client struct {
 func (c client) Listen(search string) (chan Tweet, func()) {
 	ch := make(chan Tweet)
 	var cancel bool
+	var lastTweet int
 	go func() {
 		for !cancel {
 			req, _ := http.NewRequest(http.MethodGet, apiURL+apiVersion+timelineURI, nil)
@@ -64,7 +66,7 @@ func (c client) Listen(search string) (chan Tweet, func()) {
 			req.URL.RawQuery = q.Encode()
 
 			resp, err := c.httpClient.Do(req)
-			fmt.Println("[+] Polling for tweets")
+			//fmt.Println("[+] Polling for tweets")
 
 			if err != nil {
 				log.Printf("%v", err)
@@ -83,12 +85,14 @@ func (c client) Listen(search string) (chan Tweet, func()) {
 			var tweets []TwitterStatus
 			json.Unmarshal(respBody, &tweets)
 
-			fmt.Println(tweets)
-
 			for _, tweet := range tweets {
-				ch <- Tweet{
-					Message: tweet.Text,
-					Image:   tweet.Entities.Media[0].Id,
+				if tweet.ID > lastTweet {
+					lastTweet = tweet.ID
+					log.Printf("tweet ID: %d\n", tweet.ID)
+					ch <- Tweet{
+						Message: tweet.Text,
+						Image:   tweet.Entities.Media[0].Id,
+					}
 				}
 			}
 		}
