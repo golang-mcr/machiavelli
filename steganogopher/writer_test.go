@@ -19,7 +19,7 @@ var testCase = []struct {
 	tolerance int64
 }{
 
-	{"_test/twitter.png", "_test/twitter_out-20.jpg", 20, 12 << 8},
+	{"_test/terrorcat.png", "_test/dartcat_out-20.jpg", 20, 12 << 8},
 	{"_test/twitter.png", "_test/twitter_out-60.jpg", 60, 8 << 8},
 	{"_test/twitter.png", "_test/twitter_out-80.jpg", 80, 6 << 8},
 	{"_test/twitter.png", "_test/twitter_out-90.jpg", 90, 4 << 8},
