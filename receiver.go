@@ -5,8 +5,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
+	"os/signal"
 
 	"github.com/golang-mcr/machiavelli/twitter"
 	gcfg "gopkg.in/gcfg.v1"
@@ -19,7 +21,7 @@ func main() {
 
 	var cfg Config
 	if err := gcfg.ReadFileInto(&cfg, configFile); err != nil {
-		fmt.Fprintf(os.Stderr, "error getting config variables: %v", err)
+		fmt.Fprintf(os.Stderr, "error getting config variables: %v\n", err)
 		return
 	}
 
@@ -27,7 +29,16 @@ func main() {
 	fmt.Println("Listening for tweets...")
 
 	client := twitter.NewClient(http.DefaultClient, &cfg.Twitter)
-	_, stop := client.Listen("go_machiavelli")
-	stop()
-
+	tweets, stop := client.Listen("@go_machiavelli")
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	for {
+		select {
+		case tweet := <-tweets:
+			log.Printf("tweet: %s\n", tweet.Message)
+		case <-c:
+			stop()
+			return
+		}
+	}
 }

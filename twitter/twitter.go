@@ -42,7 +42,7 @@ type Tweet struct {
 
 // Client defines the opertations of twitter client
 type Client interface {
-	Listen(search string) (<-chan Tweet, func())
+	Listen(search string) (chan Tweet, func())
 	Tweet(tweet Tweet) error
 }
 
@@ -51,7 +51,7 @@ type client struct {
 	config     *Config
 }
 
-func (c client) Listen(search string) (<-chan Tweet, func()) {
+func (c client) Listen(search string) (chan Tweet, func()) {
 	ch := make(chan Tweet)
 	var cancel bool
 	for !cancel {
@@ -84,9 +84,12 @@ func (c client) Listen(search string) (<-chan Tweet, func()) {
 
 		fmt.Println(tweets)
 
-		tweet := Tweet{}
-
-		ch <- tweet
+		for _, tweet := range tweets {
+			ch <- Tweet{
+				Message: tweet.Text,
+				Image:   tweet.Entities.Media[0].Url,
+			}
+		}
 	}
 
 	return ch, func() { cancel = true }
