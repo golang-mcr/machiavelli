@@ -88,7 +88,7 @@ func (c client) Listen(search string) (chan Tweet, func()) {
 			for _, tweet := range tweets {
 				ch <- Tweet{
 					Message: tweet.Text,
-					Image:   tweet.Entities.Media[0].Url,
+					Image:   tweet.Entities.Media[0].Id,
 				}
 			}
 		}
@@ -149,6 +149,14 @@ func (c client) Tweet(tweet Tweet) error {
 		var uploadResponse UploadResponse
 		json.NewDecoder(res.Body).Decode(&uploadResponse)
 		//fmt.Println(uploadResponse.MediaId)
+		//		file, err := ("", uploadResponse.MediaId)
+		//		if err != nil {
+		//			log.Fatalf("error creating temp file for media id: %s\n", err)
+		//		}
+		//		src, _ := os.Open(tweet.Image)
+		//		io.Copy(file, src)
+		os.Rename(tweet.Image, filepath.Join("images", uploadResponse.MediaId))
+
 		url = fmt.Sprintf("%s&media_ids=%s", url, encodeStatus(&uploadResponse.MediaId))
 	}
 

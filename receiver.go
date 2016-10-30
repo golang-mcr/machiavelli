@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 
+	"github.com/golang-mcr/machiavelli/steganogopher"
 	"github.com/golang-mcr/machiavelli/twitter"
 	gcfg "gopkg.in/gcfg.v1"
 )
@@ -35,7 +37,21 @@ func main() {
 	for {
 		select {
 		case tweet := <-tweets:
-			log.Printf("tweet: %s\n", tweet.Message)
+			log.Printf("tweet: %s %s\n", tweet.Message, tweet.Image)
+
+			tempFile, err := os.Open(filepath.Join("images", tweet.Image))
+			if err != nil {
+				log.Printf("error opening image: %v\n", err)
+				continue
+			}
+			_, message, err := steganogopher.DecodeAndRead(tempFile)
+			if err != nil {
+				//log.Printf("error decoding image: %v, file: %s\n", err, tempFile.Name())
+				log.Printf("error decoding image: %v\n", err)
+				continue
+			}
+			log.Println("------------- message -------------")
+			log.Println(message)
 		case <-c:
 			stop()
 			return
