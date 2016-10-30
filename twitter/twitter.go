@@ -144,9 +144,10 @@ func (c client) Tweet(tweet Tweet) error {
 		var uploadResponse UploadResponse
 		json.NewDecoder(res.Body).Decode(&uploadResponse)
 		//fmt.Println(uploadResponse.MediaId)
-		url = fmt.Sprintf("%smedia_ids=%s", url, encodeStatus(&uploadResponse.MediaId))
+		url = fmt.Sprintf("%s&media_ids=%s", url, encodeStatus(&uploadResponse.MediaId))
 	}
 
+	log.Printf("url: %s\n", url)
 	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
 		return fmt.Errorf("error building request: %v", err)
