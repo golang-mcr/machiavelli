@@ -30,6 +30,7 @@ func main() {
 
 	tweet := twitter.Tweet{
 		Message: message + " #" + GetCurrentHashTag(),
+		Image:   "steganogopher/_test/terrorcat.jpg",
 	}
 	fmt.Println("+-+-+-+-+-+-+-+-+-+-+-+-+-+\n|S|t|e|g|a|n|o|G|O|p|h|e|r|\n+-+-+-+-+-+-+-+-+-+-+-+-+-+")
 	fmt.Println("Sending encoded message...")
