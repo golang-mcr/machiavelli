@@ -39,7 +39,7 @@ func main() {
 
 	//	defer os.Remove(tmpfile.Name()) // clean up
 	log.Printf("temp file: %s\n", tmpfile.Name())
-	reader, err := os.Open("steganogopher/_test/evilcat.png")
+	reader, err := os.Open("steganogopher/_test/terrorcat.png")
 	if err != nil {
 		log.Fatal(err)
 	}
