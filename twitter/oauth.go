@@ -15,7 +15,8 @@ import (
 
 const (
 	apiURL          string = "https://api.twitter.com/"
-	mediaApiURL     string = "http://upload.twitter.com"
+	mediaApiURL     string = "http://upload.twitter.com/"
+	//mediaApiURL     string = "http://localhost:8080/"
 	apiVersion      string = "1.1"
 	statusURI       string = "/statuses/update.json"
 	timelineURI     string = "/statuses/user_timeline.json"
