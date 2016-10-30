@@ -15,9 +15,11 @@ import (
 
 const (
 	apiURL          string = "https://api.twitter.com/"
+	mediaApiURL     string = "http://upload.twitter.com"
 	apiVersion      string = "1.1"
 	statusURI       string = "/statuses/update.json"
 	timelineURI     string = "/statuses/user_timeline.json"
+	mediaURI        string = "/media/upload.json"
 	searchURI       string = "/search/tweets.json"
 	signatureMethod string = "HMAC-SHA1"
 	oAuthVersion    string = "1.0"
