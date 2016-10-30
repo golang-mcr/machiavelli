@@ -4,16 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
-  "log"
 
 	"bytes"
-"io"
-"mime/multipart"
-"os"
-"path/filepath"
-"github.com/dghubble/oauth1"
-"encoding/json"
+	"encoding/json"
+	"io"
+	"mime/multipart"
+	"os"
+	"path/filepath"
+
+	"github.com/dghubble/oauth1"
 )
 
 type UploadResponse struct {
@@ -21,26 +22,27 @@ type UploadResponse struct {
 }
 
 type TwitterStatus struct {
-	Text string `json:"text"`
-	Lang    string `json:"lang"`
+	Text     string `json:"text"`
+	Lang     string `json:"lang"`
 	Entities struct {
-	        Media []Media `json:"media"`
+		Media []Media `json:"media"`
 	} `json:"entities"`
 }
 
 type Media struct {
-    Id string `json:"id_str"`
-    Url string `json:"media_url"`
+	Id  string `json:"id_str"`
+	Url string `json:"media_url"`
 }
 
 // Tweet holds the contents of a tweet
 type Tweet struct {
 	Message string
+	Image   string
 }
 
 // Client defines the opertations of twitter client
 type Client interface {
-	Listen(search string) (<-chan Tweet, func())
+	Listen(search string) (chan Tweet, func())
 	Tweet(tweet Tweet) error
 }
 
@@ -49,106 +51,114 @@ type client struct {
 	config     *Config
 }
 
-func (c client) Listen(search string) (<-chan Tweet, func()) {
+func (c client) Listen(search string) (chan Tweet, func()) {
 	ch := make(chan Tweet)
 	var cancel bool
-	for !cancel {
-		req, _ := http.NewRequest(http.MethodGet, apiURL+apiVersion+timelineURI, nil)
-		q := req.URL.Query()
-		q.Add("screen_name", search)
-		q.Add("count", "1")
-		q.Add("include_rts", "false")
-		req.URL.RawQuery = q.Encode()
+	go func() {
+		for !cancel {
+			req, _ := http.NewRequest(http.MethodGet, apiURL+apiVersion+timelineURI, nil)
+			q := req.URL.Query()
+			q.Add("screen_name", search)
+			q.Add("count", "1")
+			q.Add("include_rts", "false")
+			req.URL.RawQuery = q.Encode()
 
-		resp, err := c.httpClient.Do(req)
-		fmt.Println("[+] Polling for tweets")
+			resp, err := c.httpClient.Do(req)
+			fmt.Println("[+] Polling for tweets")
 
-		if err != nil {
-			log.Printf("%v", err)
+			if err != nil {
+				log.Printf("%v", err)
+			}
+
+			if resp.StatusCode != http.StatusOK {
+				log.Printf(resp.Status)
+			}
+
+			defer resp.Body.Close()
+			respBody, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Printf("%v", err)
+			}
+
+			var tweets []TwitterStatus
+			json.Unmarshal(respBody, &tweets)
+
+			fmt.Println(tweets)
+
+			for _, tweet := range tweets {
+				ch <- Tweet{
+					Message: tweet.Text,
+					Image:   tweet.Entities.Media[0].Url,
+				}
+			}
 		}
-
-		if resp.StatusCode != http.StatusOK {
-			log.Printf(resp.Status)
-		}
-
-		defer resp.Body.Close()
-		respBody, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Printf("%v", err)
-		}
-
-		var tweets []TwitterStatus
-		json.Unmarshal(respBody, &tweets)
-
-		fmt.Println(tweets)
-
-		tweet := Tweet{}
-
-		ch <- tweet
-	}
+	}()
 
 	return ch, func() { cancel = true }
 }
 
 func newfileUploadRequest(uri string, paramName string, path string) (*http.Request, error) {
-  file, err := os.Open(path)
-  if err != nil {
-      return nil, err
-  }
-  defer file.Close()
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
 
-  body := &bytes.Buffer{}
-  writer := multipart.NewWriter(body)
-  part, err := writer.CreateFormFile(paramName, filepath.Base(path))
-  if err != nil {
-      return nil, err
-  }
-  _, err = io.Copy(part, file)
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile(paramName, filepath.Base(path))
+	if err != nil {
+		return nil, err
+	}
+	_, err = io.Copy(part, file)
 
-  err = writer.Close()
-  if err != nil {
-      return nil, err
-  }
+	err = writer.Close()
+	if err != nil {
+		return nil, err
+	}
 
-  req, err := http.NewRequest("POST", uri, body)
-  req.Header.Set("Content-Type", writer.FormDataContentType())
+	req, err := http.NewRequest("POST", uri, body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-  return req, err
+	return req, err
 }
 
 func (c client) Tweet(tweet Tweet) error {
 	if len(tweet.Message) > 140 {
 		return errors.New("tweet exceeds 140 character limit")
 	}
+	url := fmt.Sprintf(apiURL+apiVersion+statusURI+"?status=%s", encodeStatus(&tweet.Message))
 
-  req, err := newfileUploadRequest(fmt.Sprintf(mediaApiURL + apiVersion + mediaURI), "media", "steganogopher/_test/terrorcat.jpg")
+	if len(tweet.Image) > 0 {
+		req, err := newfileUploadRequest(fmt.Sprintf(mediaApiURL+apiVersion+mediaURI), "media", tweet.Image)
+		if err != nil {
+			return fmt.Errorf("error building request: %v", err)
+		}
+
+		res, err := c.httpClient.Do(req)
+		if err != nil {
+			return fmt.Errorf("%v", err)
+		}
+
+		if res.StatusCode != http.StatusOK {
+			return fmt.Errorf("%s", res.Status)
+		}
+
+		defer res.Body.Close()
+
+		var uploadResponse UploadResponse
+		json.NewDecoder(res.Body).Decode(&uploadResponse)
+		//fmt.Println(uploadResponse.MediaId)
+		url = fmt.Sprintf("%s&media_ids=%s", url, encodeStatus(&uploadResponse.MediaId))
+	}
+
+	log.Printf("url: %s\n", url)
+	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
 		return fmt.Errorf("error building request: %v", err)
 	}
 
 	res, err := c.httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("%v", err)
-	}
-
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("%s", res.Status)
-	}
-
-	defer res.Body.Close()
-
-
-	var uploadResponse UploadResponse
-  json.NewDecoder(res.Body).Decode(&uploadResponse)
-	//fmt.Println(uploadResponse.MediaId)
-
-  var url = fmt.Sprintf(apiURL+apiVersion+statusURI+"?status=%s&media_ids=%s", encodeStatus(&tweet.Message), encodeStatus(&uploadResponse.MediaId))
-	req, err = http.NewRequest(http.MethodPost, url, nil)
-	if err != nil {
-		return fmt.Errorf("error building request: %v", err)
-	}
-
-	res, err = c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("%v", err)
 	}
@@ -164,7 +174,7 @@ func (c client) Tweet(tweet Tweet) error {
 // to make future calls to twitter
 func NewClient(httpClient *http.Client, config *Config) Client {
 	config1 := oauth1.NewConfig(config.ConsumerKey, config.ConsumerSecret)
-  token := oauth1.NewToken(config.AccessToken, config.AccessTokenSecret)
+	token := oauth1.NewToken(config.AccessToken, config.AccessTokenSecret)
 	httpClient = config1.Client(oauth1.NoContext, token)
 
 	return client{httpClient, config}
